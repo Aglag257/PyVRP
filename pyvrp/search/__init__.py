@@ -2,6 +2,7 @@ from typing import Type
 
 from .LocalSearch import LocalSearch as LocalSearch
 from .SearchMethod import SearchMethod as SearchMethod
+from .TabuSearch import TabuSearch as TabuSearch
 from ._search import BinaryOperator as BinaryOperator
 from ._search import Exchange10 as Exchange10
 from ._search import Exchange11 as Exchange11
@@ -21,6 +22,8 @@ from ._search import RemoveOptional as RemoveOptional
 from ._search import ReplaceGroup as ReplaceGroup
 from ._search import ReplaceOptional as ReplaceOptional
 from ._search import SwapTails as SwapTails
+from ._search import TabuSearchParams as TabuSearchParams
+from ._search import TabuSearchStatistics as TabuSearchStatistics
 from ._search import UnaryOperator as UnaryOperator
 from .neighbourhood import NeighbourhoodParams as NeighbourhoodParams
 from .neighbourhood import compute_neighbours as compute_neighbours

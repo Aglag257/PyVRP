@@ -17,6 +17,8 @@ from pyvrp.search import (
     NeighbourhoodParams,
     PerturbationManager,
     PerturbationParams,
+    TabuSearch,
+    TabuSearchParams,
     UnaryOperator,
     compute_neighbours,
 )
@@ -46,6 +48,11 @@ class SolveParams:
         Time (in seconds) between iteration logs. Default 5s.
     perturbation
         Perturbation parameters.
+    search_method
+        Search method to use inside the ILS loop. One of
+        ``\"local_search\"`` (default) or ``\"tabu_search\"``.
+    tabu
+        Tabu search parameters, used when ``search_method=\"tabu_search\"``.
     """
 
     def __init__(
@@ -56,13 +63,23 @@ class SolveParams:
         operators: list[type[UnaryOperator | BinaryOperator]] = OPERATORS,
         display_interval: float = 5.0,
         perturbation: PerturbationParams = PerturbationParams(),
+        search_method: str = "local_search",
+        tabu: TabuSearchParams = TabuSearchParams(),
     ):
+        if search_method not in {"local_search", "tabu_search"}:
+            raise ValueError(
+                "search_method must be either 'local_search' or "
+                "'tabu_search'."
+            )
+
         self._ils = ils
         self._penalty = penalty
         self._neighbourhood = neighbourhood
         self._operators = operators
         self._display_interval = display_interval
         self._perturbation = perturbation
+        self._search_method = search_method
+        self._tabu = tabu
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -73,6 +90,8 @@ class SolveParams:
             and self.operators == other.operators
             and self.display_interval == other.display_interval
             and self.perturbation == other.perturbation
+            and self.search_method == other.search_method
+            and self.tabu == other.tabu
         )
 
     @property
@@ -99,6 +118,14 @@ class SolveParams:
     def perturbation(self):
         return self._perturbation
 
+    @property
+    def search_method(self) -> str:
+        return self._search_method
+
+    @property
+    def tabu(self):
+        return self._tabu
+
     @classmethod
     def from_file(cls, loc: str | pathlib.Path):
         """
@@ -118,6 +145,8 @@ class SolveParams:
             operators,
             data.get("display_interval", 5.0),
             PerturbationParams(**data.get("perturbation", {})),
+            data.get("search_method", "local_search"),
+            TabuSearchParams(**data.get("tabu", {})),
         )
 
 
@@ -162,12 +191,15 @@ def solve(
     """
     rng = RandomNumberGenerator(seed=seed)
     neighbours = compute_neighbours(data, params.neighbourhood)
-    perturbation = PerturbationManager(params.perturbation)
-    ls = LocalSearch(data, rng, neighbours, perturbation)
+    if params.search_method == "local_search":
+        perturbation = PerturbationManager(params.perturbation)
+        search = LocalSearch(data, rng, neighbours, perturbation)
 
-    for op in params.operators:
-        if op.supports(data):
-            ls.add_operator(op(data))
+        for op in params.operators:
+            if op.supports(data):
+                search.add_operator(op(data))
+    else:
+        search = TabuSearch(data, rng, neighbours, params.tabu)
 
     pm = PenaltyManager.init_from(data, params.penalty)
 
@@ -176,7 +208,7 @@ def solve(
         # Start from a random initial solution to ensure it's not completely
         # empty (because starting from empty solutions can be a bit difficult).
         random = Solution.make_random(data, rng)
-        init = ls(random, pm.max_cost_evaluator(), exhaustive=True)
+        init = search(random, pm.max_cost_evaluator(), exhaustive=True)
 
-    algo = IteratedLocalSearch(data, pm, rng, ls, init, params.ils)
+    algo = IteratedLocalSearch(data, pm, rng, search, init, params.ils)
     return algo.run(stop, collect_stats, display, params.display_interval)

@@ -63,6 +63,7 @@ libsearch = static_library(
         SRC_DIR / 'search' / 'SearchSpace.cpp',
         SRC_DIR / 'search' / 'Solution.cpp',
         SRC_DIR / 'search' / 'SwapTails.cpp',
+        SRC_DIR / 'search' / 'TabuSearch.cpp',
     ],
     include_directories: INCLUDES,
     link_with: libpyvrp,

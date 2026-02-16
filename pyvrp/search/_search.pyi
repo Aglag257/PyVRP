@@ -102,6 +102,65 @@ class PerturbationManager:
         cost_evaluator: CostEvaluator,
     ) -> None: ...
 
+class TabuSearchParams:
+    max_iterations: int
+    tabu_tenure: int
+    reset_frequency: int
+    aspiration: bool
+    reset_on_best: bool
+    consider_empty_routes: bool
+    def __init__(
+        self,
+        max_iterations: int = 250,
+        tabu_tenure: int = 20,
+        reset_frequency: int = 0,
+        aspiration: bool = True,
+        reset_on_best: bool = True,
+        consider_empty_routes: bool = True,
+    ) -> None: ...
+    def __eq__(self, other: object) -> bool: ...
+
+class TabuSearchStatistics:
+    num_iterations: int
+    num_moves: int
+    num_aspiration_moves: int
+    num_tabu_rejected: int
+    num_promise_rejected: int
+
+class TabuSearch:
+    def __init__(
+        self,
+        data: ProblemData,
+        neighbours: list[list[int]],
+        params: TabuSearchParams = ...,
+    ) -> None: ...
+    @property
+    def neighbours(self) -> list[list[int]]: ...
+    @neighbours.setter
+    def neighbours(self, neighbours: list[list[int]]) -> None: ...
+    @property
+    def statistics(self) -> TabuSearchStatistics: ...
+    @property
+    def promise_cost_tags(self) -> list[list[int]]: ...
+    @property
+    def promise_excess_demand(self) -> list[list[int]]: ...
+    @property
+    def promise_time_warp(self) -> list[list[int]]: ...
+    def set_promises(
+        self,
+        promise_cost_tags: list[list[int]],
+        promise_excess_demand: list[list[int]],
+        promise_time_warp: list[list[int]],
+    ) -> None: ...
+    def reset_promises(self) -> None: ...
+    def __call__(
+        self,
+        solution: pyvrp.Solution,
+        cost_evaluator: CostEvaluator,
+        exhaustive: bool = False,
+    ) -> pyvrp.Solution: ...
+    def shuffle(self, rng: RandomNumberGenerator) -> None: ...
+
 class LocalSearchStatistics:
     num_moves: int
     num_improving: int

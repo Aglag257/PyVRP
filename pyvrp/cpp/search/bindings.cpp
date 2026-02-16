@@ -12,6 +12,7 @@
 #include "SearchSpace.h"
 #include "Solution.h"
 #include "SwapTails.h"
+#include "TabuSearch.h"
 #include "search_docs.h"
 
 #include <pybind11/operators.h>
@@ -39,6 +40,8 @@ using pyvrp::search::SearchSpace;
 using pyvrp::search::Solution;
 using pyvrp::search::supports;
 using pyvrp::search::SwapTails;
+using pyvrp::search::TabuSearch;
+using pyvrp::search::TabuSearchParams;
 using pyvrp::search::UnaryOperator;
 
 PYBIND11_MODULE(_search, m)
@@ -393,6 +396,71 @@ PYBIND11_MODULE(_search, m)
              py::arg("cost_evaluator"),
              py::call_guard<py::gil_scoped_release>(),
              DOC(pyvrp, search, PerturbationManager, perturb));
+
+    py::class_<TabuSearchParams>(
+        m, "TabuSearchParams", DOC(pyvrp, search, TabuSearchParams))
+        .def(py::init<size_t, size_t, size_t, bool, bool, bool>(),
+             py::arg("max_iterations") = 250,
+             py::arg("tabu_tenure") = 20,
+             py::arg("reset_frequency") = 0,
+             py::arg("aspiration") = true,
+             py::arg("reset_on_best") = true,
+             py::arg("consider_empty_routes") = true)
+        .def_readonly("max_iterations", &TabuSearchParams::maxIterations)
+        .def_readonly("tabu_tenure", &TabuSearchParams::tabuTenure)
+        .def_readonly("reset_frequency", &TabuSearchParams::resetFrequency)
+        .def_readonly("aspiration", &TabuSearchParams::aspiration)
+        .def_readonly("reset_on_best", &TabuSearchParams::resetOnBest)
+        .def_readonly("consider_empty_routes",
+                      &TabuSearchParams::considerEmptyRoutes)
+        .def(py::self == py::self, py::arg("other"));  // this is __eq__
+
+    py::class_<TabuSearch::Statistics>(
+        m, "TabuSearchStatistics", DOC(pyvrp, search, TabuSearch, Statistics))
+        .def_readonly("num_iterations", &TabuSearch::Statistics::numIterations)
+        .def_readonly("num_moves", &TabuSearch::Statistics::numMoves)
+        .def_readonly("num_aspiration_moves",
+                      &TabuSearch::Statistics::numAspirationMoves)
+        .def_readonly("num_tabu_rejected",
+                      &TabuSearch::Statistics::numTabuRejected)
+        .def_readonly("num_promise_rejected",
+                      &TabuSearch::Statistics::numPromiseRejected);
+
+    py::class_<TabuSearch>(m, "TabuSearch", DOC(pyvrp, search, TabuSearch))
+        .def(py::init<pyvrp::ProblemData const &,
+                      std::vector<std::vector<size_t>>,
+                      TabuSearchParams>(),
+             py::arg("data"),
+             py::arg("neighbours"),
+             py::arg("params") = TabuSearchParams(),
+             py::keep_alive<1, 2>())  // keep data alive
+        .def_property("neighbours",
+                      &TabuSearch::neighbours,
+                      &TabuSearch::setNeighbours,
+                      py::return_value_policy::reference_internal)
+        .def_property_readonly("statistics", &TabuSearch::statistics)
+        .def_property_readonly("promise_cost_tags",
+                               &TabuSearch::promiseCostTags,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("promise_excess_demand",
+                               &TabuSearch::promiseExcessDemand,
+                               py::return_value_policy::reference_internal)
+        .def_property_readonly("promise_time_warp",
+                               &TabuSearch::promiseTimeWarp,
+                               py::return_value_policy::reference_internal)
+        .def("set_promises",
+             &TabuSearch::setPromises,
+             py::arg("promise_cost_tags"),
+             py::arg("promise_excess_demand"),
+             py::arg("promise_time_warp"))
+        .def("reset_promises", &TabuSearch::resetPromises)
+        .def("__call__",
+             &TabuSearch::operator(),
+             py::arg("solution"),
+             py::arg("cost_evaluator"),
+             py::arg("exhaustive") = false,
+             py::call_guard<py::gil_scoped_release>())
+        .def("shuffle", &TabuSearch::shuffle, py::arg("rng"));
 
     py::class_<LocalSearch::Statistics>(
         m, "LocalSearchStatistics", DOC(pyvrp, search, LocalSearch, Statistics))

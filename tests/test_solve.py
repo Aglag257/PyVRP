@@ -9,6 +9,7 @@ from pyvrp.search import (
     NeighbourhoodParams,
     PerturbationParams,
     SwapTails,
+    TabuSearchParams,
 )
 from pyvrp.solve import SolveParams, solve
 from pyvrp.stop import MaxIterations
@@ -27,6 +28,8 @@ def test_default_values():
     assert_equal(params.operators, OPERATORS)
     assert_allclose(params.display_interval, 5.0)
     assert_equal(params.perturbation, PerturbationParams())
+    assert_equal(params.search_method, "local_search")
+    assert_equal(params.tabu, TabuSearchParams())
 
 
 def test_solve_params_from_file():
@@ -65,6 +68,22 @@ def test_solve_same_seed(ok_small):
     """
     res1 = solve(ok_small, stop=MaxIterations(10), seed=0)
     res2 = solve(ok_small, stop=MaxIterations(10), seed=0)
+
+    assert_equal(res1.best, res2.best)
+    assert_equal(res1.stats.data, res2.stats.data)
+
+
+def test_solve_same_seed_tabu(ok_small):
+    """
+    Smoke test that checks deterministic behaviour for tabu search.
+    """
+    params = SolveParams(
+        search_method="tabu_search",
+        tabu=TabuSearchParams(max_iterations=25, tabu_tenure=5),
+    )
+
+    res1 = solve(ok_small, stop=MaxIterations(10), seed=0, params=params)
+    res2 = solve(ok_small, stop=MaxIterations(10), seed=0, params=params)
 
     assert_equal(res1.best, res2.best)
     assert_equal(res1.stats.data, res2.stats.data)
