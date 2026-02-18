@@ -42,6 +42,7 @@ libpyvrp = static_library(
         SRC_DIR / 'Trip.cpp',
         SRC_DIR / 'Route.cpp',
         SRC_DIR / 'Solution.cpp',
+        SRC_DIR / 'SubPopulation.cpp',
         SRC_DIR / 'LoadSegment.cpp',
         SRC_DIR / 'DurationSegment.cpp',
     ],
@@ -69,6 +70,49 @@ libsearch = static_library(
     link_with: libpyvrp,
 )
 
+libsearch_legacy = static_library(
+    'search_legacy',
+    [
+        SRC_DIR / 'search_legacy' / 'LocalSearch.cpp',
+        SRC_DIR / 'search_legacy' / 'RelocateWithDepot.cpp',
+        SRC_DIR / 'search_legacy' / 'Route.cpp',
+        SRC_DIR / 'search_legacy' / 'SwapRoutes.cpp',
+        SRC_DIR / 'search_legacy' / 'SwapStar.cpp',
+        SRC_DIR / 'search_legacy' / 'SwapTails.cpp',
+        SRC_DIR / 'search_legacy' / 'primitives.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: libpyvrp,
+)
+
+libcrossover = static_library(
+    'crossover',
+    [
+        SRC_DIR / 'crossover' / 'ordered_crossover.cpp',
+        SRC_DIR / 'crossover' / 'selective_route_exchange.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: libpyvrp,
+)
+
+libdiversity = static_library(
+    'diversity',
+    [SRC_DIR / 'diversity' / 'broken_pairs_distance.cpp'],
+    include_directories: INCLUDES,
+    link_with: libpyvrp,
+)
+
+librepair = static_library(
+    'repair',
+    [
+        SRC_DIR / 'repair' / 'greedy_repair.cpp',
+        SRC_DIR / 'repair' / 'nearest_route_insert.cpp',
+        SRC_DIR / 'repair' / 'repair.cpp',
+    ],
+    include_directories: INCLUDES,
+    link_with: [libpyvrp, libsearch_legacy],
+)
+
 # Extension as [extension name, subdirectory, core C++ library]. The extension
 # name names the eventual module name, subdirectory gives the source and
 # installation directories (relative to top-level directories), and the core 
@@ -76,6 +120,10 @@ libsearch = static_library(
 extensions = [
     ['pyvrp', '', libpyvrp],
     ['search', 'search', libsearch],
+    ['search_legacy', 'search_legacy', libsearch_legacy],
+    ['crossover', 'crossover', libcrossover],
+    ['diversity', 'diversity', libdiversity],
+    ['repair', 'repair', librepair],
 ]
 
 # Extension dependencies: Python itself, and pybind11.

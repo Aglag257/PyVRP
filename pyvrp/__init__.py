@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from .GeneticAlgorithm import GeneticAlgorithm as GeneticAlgorithm
+from .GeneticAlgorithm import GeneticAlgorithmParams as GeneticAlgorithmParams
 from .IteratedLocalSearch import IteratedLocalSearch as IteratedLocalSearch
 from .IteratedLocalSearch import (
     IteratedLocalSearchParams as IteratedLocalSearchParams,
@@ -10,6 +12,7 @@ from .Model import Model as Model
 from .Model import Profile as Profile
 from .PenaltyManager import PenaltyManager as PenaltyManager
 from .PenaltyManager import PenaltyParams as PenaltyParams
+from .Population import Population as Population
 from .Result import Result as Result
 from .Statistics import Statistics as Statistics
 from ._pyvrp import Client as Client
@@ -18,10 +21,12 @@ from ._pyvrp import CostEvaluator as CostEvaluator
 from ._pyvrp import Depot as Depot
 from ._pyvrp import DynamicBitset as DynamicBitset
 from ._pyvrp import ProblemData as ProblemData
+from ._pyvrp import PopulationParams as PopulationParams
 from ._pyvrp import RandomNumberGenerator as RandomNumberGenerator
 from ._pyvrp import Route as Route
 from ._pyvrp import ScheduledVisit as ScheduledVisit
 from ._pyvrp import Solution as Solution
+from ._pyvrp import SubPopulation as SubPopulation
 from ._pyvrp import Trip as Trip
 from ._pyvrp import VehicleType as VehicleType
 from .minimise_fleet import minimise_fleet as minimise_fleet
@@ -30,6 +35,8 @@ from .read import read_solution as read_solution
 from .show_versions import show_versions as show_versions
 from .solve import SolveParams as SolveParams
 from .solve import solve as solve
+from .solve_legacy import SolveParams as SolveLegacyParams
+from .solve_legacy import solve as solve_legacy
 
 # Sets up basic logging to stdout for PyVRP, of INFO and up. This replaces
 # previous print() statements, and allows easier integration into calling
